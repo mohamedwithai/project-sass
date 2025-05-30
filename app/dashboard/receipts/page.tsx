@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Download, Trash2, PenLine, Calendar } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Download, Trash2, PenLine, Calendar, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 interface User {
   id: number
@@ -85,10 +88,30 @@ const users: User[] = [
   }
 ]
 
+const handleError = (error: any) => {
+  if (error.response) {
+    const data = error.response.json();
+    if (data.error) {
+      toast.error(`Error: ${data.error}${data.details ? ` - ${data.details}` : ''}`);
+      if (data.fields) {
+        toast.error(`Missing fields: ${data.fields.join(', ')}`);
+      }
+    } else {
+      toast.error('An unexpected error occurred');
+    }
+  } else if (error.message) {
+    toast.error(`Error: ${error.message}`);
+  } else {
+    toast.error('An unexpected error occurred');
+  }
+};
+
 export default function ReceiptsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [entriesPerPage, setEntriesPerPage] = useState('5')
+  const [currentPage, setCurrentPage] = useState(1)
   const [receipts, setReceipts] = useState<Receipt[]>([])
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     date: '',
     bankCashCategory: '',
@@ -101,27 +124,190 @@ export default function ReceiptsPage() {
     amount: ''
   })
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Create new receipt with auto-generated SlNo
-    const newReceipt = {
-      ...formData,
-      slNo: receipts.length + 1
+  // Calculate pagination
+  const pageSize = parseInt(entriesPerPage)
+  const totalPages = Math.ceil(receipts.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const currentReceipts = receipts.slice(startIndex, endIndex)
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  // Handle entries per page change
+  const handleEntriesPerPageChange = (value: string) => {
+    setEntriesPerPage(value)
+    setCurrentPage(1) // Reset to first page when changing entries per page
+  }
+
+  // Fetch receipts
+  const fetchReceipts = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/receipts')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to fetch receipts')
+      }
+      const data = await response.json()
+      setReceipts(data)
+    } catch (error: any) {
+      console.error('Error fetching receipts:', error)
+      handleError(error)
+    } finally {
+      // Add a small delay to make the loading state visible
+      setTimeout(() => {
+        setLoading(false)
+      }, 500)
     }
-    setReceipts([...receipts, newReceipt])
+  }
+
+  // Load receipts on mount
+  useEffect(() => {
+    fetchReceipts()
+  }, [])
+
+  // // Calculate totals for different categories
+  // useEffect(() => {
+  //   // General Donations calculation
+  //   const generalDonations = receipts.filter(receipt => receipt.accountCategory === 'General Donation');
+  //   const generalDonationTotal = generalDonations.reduce((total, receipt) => {
+  //     const amount = parseFloat(receipt.amount.replace(/,/g, '')) || 0;
+  //     return total + amount;
+  //   }, 0);
+
+  //   // Interest Capitalized From Bank calculation
+  //   const interestEntries = receipts.filter(receipt => receipt.accountCategory === 'Interest Capitalized From Bank');
     
-    // Reset form
-    setFormData({
-      date: '',
-      bankCashCategory: '',
-      accountCategory: '',
-      ledgerCategory: '',
-      events: '',
-      donar: '',
-      description: '',
-      source: '',
-      amount: ''
-    })
+  //   console.log('\nInterest Capitalized From Bank Breakdown:');
+  //   console.log('---------------------------------------');
+  //   interestEntries.forEach(receipt => {
+  //     console.log(`Date: ${receipt.date}, Amount: ₹${receipt.amount}, Bank: ${receipt.bankCashCategory}`);
+  //   });
+    
+  //   const interestTotal = interestEntries.reduce((total, receipt) => {
+  //     const amount = parseFloat(receipt.amount.replace(/,/g, '')) || 0;
+  //     return total + amount;
+  //   }, 0);
+    
+  //   console.log('\nTotal Interest Capitalized:', interestTotal.toLocaleString('en-IN', {
+  //     style: 'currency',
+  //     currency: 'INR'
+  //   }));
+  //   console.log('Number of Interest entries:', interestEntries.length);
+
+  //   // Summary of both categories
+  //   console.log('\nSummary of Categories:');
+  //   console.log('---------------------');
+  //   console.log('General Donations:', generalDonationTotal.toLocaleString('en-IN', {
+  //     style: 'currency',
+  //     currency: 'INR'
+  //   }));
+  //   console.log('Interest Capitalized:', interestTotal.toLocaleString('en-IN', {
+  //     style: 'currency',
+  //     currency: 'INR'
+  //   }));
+    
+  // }, [receipts]);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      setLoading(true)
+      const response = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to add receipt')
+      }
+      
+      const newReceipt = await response.json()
+      setReceipts([...receipts, newReceipt])
+      toast.success('Receipt added successfully')
+      
+      // Reset form
+      setFormData({
+        date: '',
+        bankCashCategory: '',
+        accountCategory: '',
+        ledgerCategory: '',
+        events: '',
+        donar: '',
+        description: '',
+        source: '',
+        amount: ''
+      })
+    } catch (error: any) {
+      console.error('Error adding receipt:', error)
+      handleError(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (slNo: number) => {
+    if (!confirm('Are you sure you want to delete this receipt?')) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      const response = await fetch('/api/receipts', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slNo }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to delete receipt')
+      }
+      
+      setReceipts(receipts.filter(receipt => receipt.slNo !== slNo))
+      toast.success('Receipt deleted successfully')
+    } catch (error: any) {
+      console.error('Error deleting receipt:', error)
+      handleError(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = async (receipt: Receipt) => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/receipts', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(receipt),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || error.error || 'Failed to update receipt')
+      }
+      
+      const updatedReceipt = await response.json()
+      setReceipts(receipts.map(r => r.slNo === receipt.slNo ? updatedReceipt : r))
+      toast.success('Receipt updated successfully')
+    } catch (error: any) {
+      console.error('Error updating receipt:', error)
+      handleError(error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -260,10 +446,17 @@ export default function ReceiptsPage() {
                 <Label htmlFor="amount" className="text-gray-900 dark:text-white">Amount</Label>
                 <Input
                   id="amount"
-                  type="number"
+                  type="text"
                   value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      amount: value
+                    }));
+                  }}
                   className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white"
+                  placeholder="Enter amount (e.g., 19000.00)"
                 />
               </div>
             </div>
@@ -273,8 +466,9 @@ export default function ReceiptsPage() {
               <Button
                 type="submit"
                 className="bg-[#3C50E0] text-white hover:bg-[#3C50E0]/90"
+                disabled={loading}
               >
-                Receipt Entry
+                {loading ? 'Processing...' : 'Receipt Entry'}
               </Button>
             </div>
           </form>
@@ -291,15 +485,21 @@ export default function ReceiptsPage() {
               <span className="text-sm text-gray-500 dark:text-[#8A99AF]">Show</span>
               <Select
                 value={entriesPerPage}
-                onValueChange={setEntriesPerPage}
+                onValueChange={handleEntriesPerPageChange}
               >
                 <SelectTrigger className="w-[70px] bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white rounded-lg">
                   <SelectValue placeholder="5" />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] rounded-lg">
-                  <SelectItem value="5" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D]">5</SelectItem>
-                  <SelectItem value="10" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D]">10</SelectItem>
-                  <SelectItem value="20" className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D]">20</SelectItem>
+                <SelectContent className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] rounded-lg max-h-[200px]">
+                  {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map((value) => (
+                    <SelectItem 
+                      key={value} 
+                      value={value.toString()}
+                      className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D]"
+                    >
+                      {value}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <span className="text-sm text-gray-500 dark:text-[#8A99AF]">entries</span>
@@ -324,128 +524,192 @@ export default function ReceiptsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-[#2E3A4D]">
+          <ScrollArea className="h-[400px] rounded-md">
             <div className="overflow-x-auto">
-              <table className="w-full table-auto border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 dark:bg-[#1C2434]">
-                    <th className="w-[30px] px-4 py-4 border-r border-gray-200 dark:border-[#2E3A4D] first:rounded-tl-lg">
-                      <input type="checkbox" className="rounded border-gray-200 dark:border-[#2E3A4D]" />
-                    </th>
-                    <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Sl No
-                      </button>
-                    </th>
-                    <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Date
-                      </button>
-                    </th>
-                    <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Category
-                      </button>
-                    </th>
-                    <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Description
-                      </button>
-                    </th>
-                    <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Amount
-                      </button>
-                    </th>
-                    <th className="px-4 py-4 text-left last:rounded-tr-lg">
-                      <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                        Action
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {receipts.map((receipt) => (
-                    <tr key={receipt.slNo} className="border-b border-gray-200 dark:border-[#2E3A4D] last:border-b-0">
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <Loader2 className="h-10 w-10 animate-spin text-gray-500 dark:text-[#8A99AF]" />
+                  <p className="mt-4 text-sm text-gray-500 dark:text-[#8A99AF]">Loading receipts...</p>
+                </div>
+              ) : receipts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <p className="text-sm text-gray-500 dark:text-[#8A99AF]">No receipts found</p>
+                </div>
+              ) : (
+                <table className="w-full table-auto border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 dark:bg-[#1C2434]">
+                      <th className="w-[30px] px-4 py-4 border-r border-gray-200 dark:border-[#2E3A4D] first:rounded-tl-lg">
                         <input type="checkbox" className="rounded border-gray-200 dark:border-[#2E3A4D]" />
-                      </td>
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.slNo}</p>
-                      </td>
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.date}</p>
-                      </td>
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <div>
-                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.bankCashCategory}</p>
-                          <p className="text-[14px] leading-[20px] font-normal text-gray-500 dark:text-[#8A99AF]">{receipt.accountCategory}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.description}</p>
-                      </td>
-                      <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">₹{Number(receipt.amount).toLocaleString()}</p>
-                      </td>
-                      <td className="px-4 py-5">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-500 dark:text-[#8A99AF] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-500 dark:text-[#8A99AF] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
-                          >
-                            <PenLine className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                        </div>
-                      </td>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Sl No
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Date
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Bank/Cash Category
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Account Category
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Ledger Category
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Events
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Donar
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Description
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Source
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Amount
+                        </button>
+                      </th>
+                      <th className="px-4 py-4 text-left last:rounded-tr-lg">
+                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                          Action
+                        </button>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentReceipts.map((receipt) => (
+                      <tr key={receipt.slNo} className="border-b border-gray-200 dark:border-[#2E3A4D] last:border-b-0">
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <input type="checkbox" className="rounded border-gray-200 dark:border-[#2E3A4D]" />
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.slNo}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.date}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.bankCashCategory}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.accountCategory}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.ledgerCategory}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.events}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.donar}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.description}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.source}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">
+                            ₹{receipt.amount}
+                          </p>
+                        </td>
+                        <td className="px-4 py-5">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-gray-500 dark:text-[#8A99AF] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
+                              onClick={() => handleDelete(receipt.slNo)}
+                              disabled={loading}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-gray-500 dark:text-[#8A99AF] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
+                              onClick={() => handleEdit(receipt)}
+                              disabled={loading}
+                            >
+                              <PenLine className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-          </div>
+          </ScrollArea>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-6">
             <p className="text-sm text-gray-500 dark:text-[#8A99AF]">
-              Showing {receipts.length > 0 ? 1 : 0} to {receipts.length} of {receipts.length} entries
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Calculating entries...
+                </span>
+              ) : (
+                `Showing ${startIndex + 1} to ${Math.min(endIndex, receipts.length)} of ${receipts.length} entries`
+              )}
             </p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
                 className="border-gray-200 dark:border-[#2E3A4D] text-gray-500 dark:text-[#8A99AF] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
               >
                 Previous
               </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className={cn(
+                    "min-w-[36px] border-gray-200 dark:border-[#2E3A4D] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg",
+                    currentPage === page ? "bg-white dark:bg-[#1C2434] text-gray-900 dark:text-white" : "text-gray-500 dark:text-[#8A99AF]"
+                  )}
+                >
+                  {page}
+                </Button>
+              ))}
               <Button
                 variant="outline"
                 size="sm"
-                className="min-w-[36px] border-gray-200 dark:border-[#2E3A4D] bg-white dark:bg-[#1C2434] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
-              >
-                1
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="min-w-[36px] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
-              >
-                2
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="border-gray-200 dark:border-[#2E3A4D] text-gray-500 dark:text-[#8A99AF] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
               >
                 Next
               </Button>

@@ -4,6 +4,7 @@ import { Outfit } from 'next/font/google'
 import { Providers } from './providers'
 import { Toaster } from '@/components/ui/toaster'
 import { Dashboard } from '@/components/layout/dashboard'
+import { Toaster as SonnerToaster } from 'sonner'
 
 const outfit = Outfit({ 
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Providers>
           <Dashboard>{children}</Dashboard>
           <Toaster />
+          <SonnerToaster />
         </Providers>
       </body>
     </html>
