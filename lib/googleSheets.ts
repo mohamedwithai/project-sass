@@ -30,7 +30,7 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 // Function to get all receipts
 export async function getReceipts() {
   try {
-    const range = 'Receipts!A2:J'; // Assuming headers are in row 1
+    const range = 'Receipts!A2:K'; // Assuming headers are in row 1
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
       range,
@@ -43,11 +43,12 @@ export async function getReceipts() {
       bankCashCategory: row[2] || '',
       accountCategory: row[3] || '',
       ledgerCategory: row[4] || '',
-      events: row[5] || '',
-      donar: row[6] || '',
-      description: row[7] || '',
-      source: row[8] || '',
-      amount: row[9] ? row[9].toString() : '0.00',
+      Account_Type: row[5] || '',
+      events: row[6] || '',
+      donar: row[7] || '',
+      description: row[8] || '',
+      source: row[9] || '',
+      amount: row[10] ? row[10].toString() : '0.00',
     }));
   } catch (error) {
     console.error('Error fetching receipts:', error);
@@ -61,6 +62,7 @@ export async function addReceipt(receipt: {
   bankCashCategory: string;
   accountCategory: string;
   ledgerCategory: string;
+  Account_Type: string;
   events: string;
   donar: string;
   description: string;
@@ -68,7 +70,7 @@ export async function addReceipt(receipt: {
   amount: string;
 }) {
   try {
-    const range = 'Receipts!A:J';
+    const range = 'Receipts!A:K';
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
       range: 'Receipts!A:A',
@@ -85,6 +87,7 @@ export async function addReceipt(receipt: {
         receipt.bankCashCategory,
         receipt.accountCategory,
         receipt.ledgerCategory,
+        receipt.Account_Type,
         receipt.events,
         receipt.donar,
         receipt.description,
@@ -117,6 +120,7 @@ export async function updateReceipt(
     bankCashCategory: string;
     accountCategory: string;
     ledgerCategory: string;
+    Account_Type: string;
     events: string;
     donar: string;
     description: string;
@@ -126,7 +130,7 @@ export async function updateReceipt(
 ) {
   try {
     const row = slNo + 1; // Add 1 to account for header row
-    const range = `Receipts!A${row}:J${row}`;
+    const range = `Receipts!A${row}:K${row}`;
 
     const values = [
       [
@@ -135,6 +139,7 @@ export async function updateReceipt(
         receipt.bankCashCategory,
         receipt.accountCategory,
         receipt.ledgerCategory,
+        receipt.Account_Type,
         receipt.events,
         receipt.donar,
         receipt.description,
@@ -163,7 +168,7 @@ export async function updateReceipt(
 export async function deleteReceipt(slNo: number) {
   try {
     const row = slNo + 1; // Add 1 to account for header row
-    const range = `Receipts!A${row}:J${row}`;
+    const range = `Receipts!A${row}:K${row}`;
 
     await sheets.spreadsheets.values.clear({
       spreadsheetId: SHEET_ID,

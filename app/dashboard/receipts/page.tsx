@@ -33,6 +33,7 @@ interface Receipt {
   bankCashCategory: string
   accountCategory: string
   ledgerCategory: string
+  Account_Type: string
   events: string
   donar: string
   description: string
@@ -40,53 +41,53 @@ interface Receipt {
   amount: string
 }
 
-const users: User[] = [
-  {
-    id: 1,
-    name: 'Lindsey Curtis',
-    email: 'demoemail@gmail.com',
-    position: 'Sales Assistant',
-    salary: 89500,
-    office: 'Edinburgh',
-    status: 'Hired'
-  },
-  {
-    id: 2,
-    name: 'Kaiya George',
-    email: 'demoemail@gmail.com',
-    position: 'Chief Executive Officer',
-    salary: 105000,
-    office: 'London',
-    status: 'In Progress'
-  },
-  {
-    id: 3,
-    name: 'Zain Geidt',
-    email: 'demoemail@gmail.com',
-    position: 'Junior Technical Author',
-    salary: 120000,
-    office: 'San Francisco',
-    status: 'In Progress'
-  },
-  {
-    id: 4,
-    name: 'Abram Schleifer',
-    email: 'demoemail@gmail.com',
-    position: 'Software Engineer',
-    salary: 95000,
-    office: 'New York',
-    status: 'Hired'
-  },
-  {
-    id: 5,
-    name: 'Carla George',
-    email: 'demoemail@gmail.com',
-    position: 'Integration Specialist',
-    salary: 80000,
-    office: 'Chicago',
-    status: 'Pending'
-  }
-]
+// const users: User[] = [
+//   {
+//     id: 1,
+//     name: 'Lindsey Curtis',
+//     email: 'demoemail@gmail.com',
+//     position: 'Sales Assistant',
+//     salary: 89500,
+//     office: 'Edinburgh',
+//     status: 'Hired'
+//   },
+//   {
+//     id: 2,
+//     name: 'Kaiya George',
+//     email: 'demoemail@gmail.com',
+//     position: 'Chief Executive Officer',
+//     salary: 105000,
+//     office: 'London',
+//     status: 'In Progress'
+//   },
+//   {
+//     id: 3,
+//     name: 'Zain Geidt',
+//     email: 'demoemail@gmail.com',
+//     position: 'Junior Technical Author',
+//     salary: 120000,
+//     office: 'San Francisco',
+//     status: 'In Progress'
+//   },
+//   {
+//     id: 4,
+//     name: 'Abram Schleifer',
+//     email: 'demoemail@gmail.com',
+//     position: 'Software Engineer',
+//     salary: 95000,
+//     office: 'New York',
+//     status: 'Hired'
+//   },
+//   {
+//     id: 5,
+//     name: 'Carla George',
+//     email: 'demoemail@gmail.com',
+//     position: 'Integration Specialist',
+//     salary: 80000,
+//     office: 'Chicago',
+//     status: 'Pending'
+//   }
+// ]
 
 const handleError = (error: any) => {
   if (error.response) {
@@ -117,6 +118,7 @@ export default function ReceiptsPage() {
     bankCashCategory: '',
     accountCategory: '',
     ledgerCategory: '',
+    Account_Type: '',
     events: '',
     donar: '',
     description: '',
@@ -143,6 +145,7 @@ export default function ReceiptsPage() {
         receipt.bankCashCategory.toLowerCase().includes(searchLower) ||
         receipt.accountCategory.toLowerCase().includes(searchLower) ||
         receipt.ledgerCategory.toLowerCase().includes(searchLower) ||
+        receipt.Account_Type.toLowerCase().includes(searchLower) ||
         receipt.events.toLowerCase().includes(searchLower) ||
         receipt.donar.toLowerCase().includes(searchLower) ||
         receipt.description.toLowerCase().includes(searchLower) ||
@@ -258,6 +261,7 @@ export default function ReceiptsPage() {
         bankCashCategory: '',
         accountCategory: '',
         ledgerCategory: '',
+        Account_Type: '',
         events: '',
         donar: '',
         description: '',
@@ -564,6 +568,7 @@ export default function ReceiptsPage() {
                         { key: 'bankCashCategory', label: 'Bank/Cash' },
                         { key: 'accountCategory', label: 'Account' },
                         { key: 'ledgerCategory', label: 'Ledger' },
+                        { key: 'Account_Type', label: 'Account Type' },
                         { key: 'events', label: 'Events' },
                         { key: 'donar', label: 'Donar' },
                         { key: 'description', label: 'Description' },
@@ -607,6 +612,9 @@ export default function ReceiptsPage() {
                         </td>
                         <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.ledgerCategory}</p>
+                        </td>
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
+                          <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.Account_Type}</p>
                         </td>
                         <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.events}</p>
