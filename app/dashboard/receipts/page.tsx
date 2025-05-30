@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Search, Download, Trash2, PenLine, Calendar, Loader2 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search, Download, Trash2, PenLine, Calendar, Loader2, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -123,13 +123,40 @@ export default function ReceiptsPage() {
     source: '',
     amount: ''
   })
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Receipt | null;
+    direction: 'asc' | 'desc' | null;
+  }>({
+    key: null,
+    direction: null
+  });
 
-  // Calculate pagination
+  // Add search filter function
+  const filteredReceipts = React.useMemo(() => {
+    if (!searchTerm) return receipts;
+
+    return receipts.filter((receipt) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        receipt.slNo.toString().includes(searchLower) ||
+        receipt.date.toLowerCase().includes(searchLower) ||
+        receipt.bankCashCategory.toLowerCase().includes(searchLower) ||
+        receipt.accountCategory.toLowerCase().includes(searchLower) ||
+        receipt.ledgerCategory.toLowerCase().includes(searchLower) ||
+        receipt.events.toLowerCase().includes(searchLower) ||
+        receipt.donar.toLowerCase().includes(searchLower) ||
+        receipt.description.toLowerCase().includes(searchLower) ||
+        receipt.source.toLowerCase().includes(searchLower) ||
+        receipt.amount.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [receipts, searchTerm]);
+
+  // Update pagination calculations to use filtered results
   const pageSize = parseInt(entriesPerPage)
-  const totalPages = Math.ceil(receipts.length / pageSize)
+  const totalPages = Math.ceil(filteredReceipts.length / pageSize)
   const startIndex = (currentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
-  const currentReceipts = receipts.slice(startIndex, endIndex)
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -169,48 +196,40 @@ export default function ReceiptsPage() {
     fetchReceipts()
   }, [])
 
-  // // Calculate totals for different categories
-  // useEffect(() => {
-  //   // General Donations calculation
-  //   const generalDonations = receipts.filter(receipt => receipt.accountCategory === 'General Donation');
-  //   const generalDonationTotal = generalDonations.reduce((total, receipt) => {
-  //     const amount = parseFloat(receipt.amount.replace(/,/g, '')) || 0;
-  //     return total + amount;
-  //   }, 0);
+  // Add sort function
+  const handleSort = (key: keyof Receipt) => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+    
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
 
-  //   // Interest Capitalized From Bank calculation
-  //   const interestEntries = receipts.filter(receipt => receipt.accountCategory === 'Interest Capitalized From Bank');
-    
-  //   console.log('\nInterest Capitalized From Bank Breakdown:');
-  //   console.log('---------------------------------------');
-  //   interestEntries.forEach(receipt => {
-  //     console.log(`Date: ${receipt.date}, Amount: ₹${receipt.amount}, Bank: ${receipt.bankCashCategory}`);
-  //   });
-    
-  //   const interestTotal = interestEntries.reduce((total, receipt) => {
-  //     const amount = parseFloat(receipt.amount.replace(/,/g, '')) || 0;
-  //     return total + amount;
-  //   }, 0);
-    
-  //   console.log('\nTotal Interest Capitalized:', interestTotal.toLocaleString('en-IN', {
-  //     style: 'currency',
-  //     currency: 'INR'
-  //   }));
-  //   console.log('Number of Interest entries:', interestEntries.length);
+    setSortConfig({ key, direction });
+  };
 
-  //   // Summary of both categories
-  //   console.log('\nSummary of Categories:');
-  //   console.log('---------------------');
-  //   console.log('General Donations:', generalDonationTotal.toLocaleString('en-IN', {
-  //     style: 'currency',
-  //     currency: 'INR'
-  //   }));
-  //   console.log('Interest Capitalized:', interestTotal.toLocaleString('en-IN', {
-  //     style: 'currency',
-  //     currency: 'INR'
-  //   }));
-    
-  // }, [receipts]);
+  // Sort receipts from filtered results
+  const sortedReceipts = React.useMemo(() => {
+    if (!sortConfig.key || !sortConfig.direction) return filteredReceipts;
+
+    return [...filteredReceipts].sort((a, b) => {
+      if (a[sortConfig.key!] < b[sortConfig.key!]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key!] > b[sortConfig.key!]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredReceipts, sortConfig]);
+
+  const displayedReceipts = sortedReceipts.slice(startIndex, endIndex);
+
+  // Update the search input to use debounce for better performance
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -476,163 +495,132 @@ export default function ReceiptsPage() {
       </div>
 
       {/* Existing table component */}
-      <div className="rounded-lg border border-gray-200 dark:border-[#2E3A4D] bg-white dark:bg-[#0F1824]">
+      <div className="rounded-lg border border-[#2E3A4D] bg-[#0F1824]">
         <div className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Receipts</h3>
-          <p className="text-sm font-light text-gray-500 dark:text-[#8A99AF] mb-6">All Entries are shows here...</p>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 dark:text-[#8A99AF]">Show</span>
-              <Select
-                value={entriesPerPage}
-                onValueChange={handleEntriesPerPageChange}
-              >
-                <SelectTrigger className="w-[70px] bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white rounded-lg">
-                  <SelectValue placeholder="5" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] rounded-lg max-h-[200px]">
-                  {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map((value) => (
-                    <SelectItem 
-                      key={value} 
-                      value={value.toString()}
-                      className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D]"
-                    >
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-gray-500 dark:text-[#8A99AF]">entries</span>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Receipts</h2>
+              <p className="text-sm font-normal pt-1 text-[#8A99AF]">view and manage all your receipts.</p>
             </div>
-
             <div className="flex items-center gap-4">
               <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8A99AF]" />
                 <Input
                   type="search"
                   placeholder="Search..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full md:w-[240px] pl-9 bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-[#8A99AF] rounded-lg"
+                  onChange={handleSearch}
+                  className="w-[300px] pl-9 bg-[#1C2434] border-[#2E3A4D] text-white placeholder:text-[#8A99AF] rounded-lg"
                 />
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-[#8A99AF]" />
               </div>
-
-              <Button variant="outline" size="sm" className="border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg">
-                <Download className="h-4 w-4" />
-                <span className="sr-only">Download</span>
-              </Button>
             </div>
           </div>
 
-          <ScrollArea className="h-[400px] rounded-md">
-            <div className="overflow-x-auto">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <Loader2 className="h-10 w-10 animate-spin text-gray-500 dark:text-[#8A99AF]" />
-                  <p className="mt-4 text-sm text-gray-500 dark:text-[#8A99AF]">Loading receipts...</p>
-                </div>
-              ) : receipts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <p className="text-sm text-gray-500 dark:text-[#8A99AF]">No receipts found</p>
-                </div>
-              ) : (
-                <table className="w-full table-auto border-collapse">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-sm text-[#8A99AF]">Show</span>
+            <Select
+              value={entriesPerPage}
+              onValueChange={handleEntriesPerPageChange}
+            >
+              <SelectTrigger className="w-[70px] bg-[#1C2434] border-[#2E3A4D] text-white rounded-lg">
+                <SelectValue placeholder="5" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1C2434] border-[#2E3A4D] rounded-lg max-h-[200px]">
+                {Array.from({ length: 10 }, (_, i) => (i + 1) * 5).map((value) => (
+                  <SelectItem 
+                    key={value} 
+                    value={value.toString()}
+                    className="text-white hover:bg-[#2E3A4D]"
+                  >
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-[#8A99AF]">entries</span>
+          </div>
+
+          <div className="border border-[#2E3A4D] rounded-lg overflow-hidden">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-10 bg-[#1C2434]">
+                <Loader2 className="h-10 w-10 animate-spin text-[#8A99AF]" />
+                <p className="mt-4 text-sm text-[#8A99AF]">Loading receipts...</p>
+              </div>
+            ) : filteredReceipts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 bg-[#1C2434]">
+                <p className="text-sm text-[#8A99AF]">No receipts found</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead>
-                    <tr className="bg-gray-50 dark:bg-[#1C2434]">
-                      <th className="w-[30px] px-4 py-4 border-r border-gray-200 dark:border-[#2E3A4D] first:rounded-tl-lg">
-                        <input type="checkbox" className="rounded border-gray-200 dark:border-[#2E3A4D]" />
+                    <tr className="bg-[#1C2434] border-b border-[#2E3A4D]">
+                      <th className="w-[30px] px-4 py-4 border-r border-[#2E3A4D]">
+                        <input type="checkbox" className="rounded border-[#2E3A4D]" />
                       </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Sl No
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Date
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Bank/Cash Category
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Account Category
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Ledger Category
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Events
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Donar
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Description
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Source
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left border-r border-gray-200 dark:border-[#2E3A4D]">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
-                          Amount
-                        </button>
-                      </th>
-                      <th className="px-4 py-4 text-left last:rounded-tr-lg">
-                        <button className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-gray-500 dark:text-[#8A99AF]">
+                      {[
+                        { key: 'slNo', label: 'Sl No' },
+                        { key: 'date', label: 'Date' },
+                        { key: 'bankCashCategory', label: 'Bank/Cash' },
+                        { key: 'accountCategory', label: 'Account' },
+                        { key: 'ledgerCategory', label: 'Ledger' },
+                        { key: 'events', label: 'Events' },
+                        { key: 'donar', label: 'Donar' },
+                        { key: 'description', label: 'Description' },
+                        { key: 'source', label: 'Source' },
+                        { key: 'amount', label: 'Amount' }
+                      ].map(({ key, label }) => (
+                        <th key={key} className="px-4 py-4 text-left border-r border-[#2E3A4D]">
+                          <button 
+                            onClick={() => handleSort(key as keyof Receipt)}
+                            className="flex items-center gap-1 text-[12px] leading-[18px] font-medium text-[#8A99AF] hover:text-white"
+                          >
+                            {label}
+                            <ArrowUpDown className="h-4 w-4" />
+                          </button>
+                        </th>
+                      ))}
+                      <th className="px-4 py-4 text-left">
+                        <span className="text-[12px] leading-[18px] font-medium text-[#8A99AF]">
                           Action
-                        </button>
+                        </span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {currentReceipts.map((receipt) => (
-                      <tr key={receipt.slNo} className="border-b border-gray-200 dark:border-[#2E3A4D] last:border-b-0">
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
-                          <input type="checkbox" className="rounded border-gray-200 dark:border-[#2E3A4D]" />
+                    {displayedReceipts.map((receipt) => (
+                      <tr key={receipt.slNo} className="border-b border-[#2E3A4D] bg-[#1C2434] hover:bg-[#2E3A4D]/50">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
+                          <input type="checkbox" className="rounded border-[#2E3A4D]" />
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.slNo}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.date}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.bankCashCategory}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.accountCategory}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.ledgerCategory}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.events}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.donar}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.description}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">{receipt.source}</p>
                         </td>
-                        <td className="px-4 py-5 border-r border-gray-200 dark:border-[#2E3A4D]">
+                        <td className="px-4 py-5 border-r border-[#2E3A4D]">
                           <p className="text-[14px] leading-[20px] font-normal text-gray-900 dark:text-white">
                             ₹{receipt.amount}
                           </p>
@@ -665,19 +653,19 @@ export default function ReceiptsPage() {
                     ))}
                   </tbody>
                 </table>
-              )}
-            </div>
-          </ScrollArea>
+              </div>
+            )}
+          </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-6">
-            <p className="text-sm text-gray-500 dark:text-[#8A99AF]">
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-sm text-[#8A99AF]">
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Calculating entries...
                 </span>
               ) : (
-                `Showing ${startIndex + 1} to ${Math.min(endIndex, receipts.length)} of ${receipts.length} entries`
+                `Showing ${startIndex + 1} to ${Math.min(endIndex, filteredReceipts.length)} of ${filteredReceipts.length} entries`
               )}
             </p>
             <div className="flex items-center gap-2">
@@ -686,7 +674,7 @@ export default function ReceiptsPage() {
                 size="sm"
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="border-gray-200 dark:border-[#2E3A4D] text-gray-500 dark:text-[#8A99AF] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
+                className="border-[#2E3A4D] text-[#8A99AF] hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
               >
                 Previous
               </Button>
@@ -697,8 +685,8 @@ export default function ReceiptsPage() {
                   size="sm"
                   onClick={() => handlePageChange(page)}
                   className={cn(
-                    "min-w-[36px] border-gray-200 dark:border-[#2E3A4D] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] rounded-lg",
-                    currentPage === page ? "bg-white dark:bg-[#1C2434] text-gray-900 dark:text-white" : "text-gray-500 dark:text-[#8A99AF]"
+                    "min-w-[36px] border-[#2E3A4D] hover:bg-[#2E3A4D] rounded-lg",
+                    currentPage === page ? "bg-[#1C2434] text-white" : "text-[#8A99AF]"
                   )}
                 >
                   {page}
@@ -709,7 +697,7 @@ export default function ReceiptsPage() {
                 size="sm"
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="border-gray-200 dark:border-[#2E3A4D] text-gray-500 dark:text-[#8A99AF] hover:bg-gray-100 dark:hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
+                className="border-[#2E3A4D] text-[#8A99AF] hover:bg-[#2E3A4D] disabled:opacity-50 rounded-lg"
               >
                 Next
               </Button>
