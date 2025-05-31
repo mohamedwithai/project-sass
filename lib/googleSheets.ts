@@ -181,4 +181,131 @@ export async function deleteReceipt(slNo: number) {
     console.error('Error deleting receipt:', error);
     throw error;
   }
+}
+
+// Function to get unique Account Categories
+export async function getUniqueAccountCategories() {
+  try {
+    const range = 'Receipts!D2:D'; // Column D contains Account Categories
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    // Get unique values and remove empty strings
+    const uniqueCategories = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueCategories.sort();
+  } catch (error) {
+    console.error('Error fetching account categories:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Bank/Cash Categories
+export async function getUniqueBankCashCategories() {
+  try {
+    const range = 'Receipts!C2:C'; // Column C contains Bank/Cash Categories
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueCategories = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueCategories.sort();
+  } catch (error) {
+    console.error('Error fetching bank/cash categories:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Ledger Categories
+export async function getUniqueLedgerCategories() {
+  try {
+    const range = 'Receipts!E2:E'; // Column E contains Ledger Categories
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueCategories = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueCategories.sort();
+  } catch (error) {
+    console.error('Error fetching ledger categories:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Account Types
+export async function getUniqueAccountTypes() {
+  try {
+    const range = 'Receipts!F2:F'; // Column F contains Account Types
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueTypes = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueTypes.sort();
+  } catch (error) {
+    console.error('Error fetching account types:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Events
+export async function getUniqueEvents() {
+  try {
+    const range = 'Receipts!G2:G'; // Column G contains Events
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueEvents = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueEvents.sort();
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Donar Types
+export async function getUniqueDonarTypes() {
+  try {
+    const range = 'Receipts!H2:H'; // Column H contains Donar Types
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueTypes = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueTypes.sort();
+  } catch (error) {
+    console.error('Error fetching donar types:', error);
+    throw error;
+  }
+}
+
+// Function to get unique Source Types
+export async function getUniqueSourceTypes() {
+  try {
+    const range = 'Receipts!J2:J'; // Column J contains Source Types
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
+
+    const rows = response.data.values || [];
+    const uniqueTypes = [...new Set(rows.flat())].filter(Boolean);
+    return uniqueTypes.sort();
+  } catch (error) {
+    console.error('Error fetching source types:', error);
+    throw error;
+  }
 } 
