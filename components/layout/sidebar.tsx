@@ -58,7 +58,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     <aside
       id="sidebar"
       className={cn(
-        'fixed z-40 left-0 top-0 h-screen w-64 flex-shrink-0 bg-gray-50 dark:bg-[#0F1824] transition-all duration-300 ease-in-out lg:static',
+        'fixed z-40 left-0 top-0 h-screen w-64 flex-shrink-0 bg-[var(--page-bg)] dark:bg-[#0f172a] transition-all duration-300 ease-in-out lg:static border-r border-[var(--border-soft)] dark:border-r-[#1d2939]',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}
     >
@@ -66,16 +66,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-6 py-5">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#3C50E0]">
-              <LayoutDashboard className="h-6 w-6 text-white" />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[var(--accent-primary)]">
+              <LayoutDashboard className="h-6 w-6 text-[var(--accent-text-on-primary)]" />
             </div>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">TailAdmin</span>
+            <span className="text-lg font-semibold text-[var(--text-normal)]">TailAdmin</span>
           </Link>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(false)}
-            className="flex lg:hidden text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1C2434]"
+            className="flex lg:hidden text-[var(--text-muted)] hover:bg-[var(--border-soft)]"
           >
             <X className="w-6 h-6" />
             <span className="sr-only">Close sidebar</span>
@@ -83,7 +83,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </div>
 
         <div className="px-6 py-4">
-          <p className="text-xs font-medium text-gray-500 dark:text-[#8A99AF] tracking-wider">MENU</p>
+          <p className="text-xs font-medium text-[var(--text-muted)] tracking-wider">MENU</p>
         </div>
 
         {/* Sidebar content */}
@@ -126,14 +126,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </ScrollArea>
 
         {/* Sidebar footer */}
-        <div className="mt-auto p-4 border-t border-gray-200 dark:border-[#2E3A4D]">
-          <div className="flex items-center gap-3 rounded-lg bg-gray-100 dark:bg-[#2E3A4D] p-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3C50E0] text-white font-semibold">
+        <div className="mt-auto p-4 border-t border-[var(--border-soft)]">
+          <div className="flex items-center gap-3 rounded-lg bg-[var(--page-bg)] p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-primary)] text-[var(--accent-text-on-primary)] font-semibold">
               JD
             </div>
             <div className="flex-1">
-              <h5 className="font-medium text-sm text-gray-900 dark:text-white">John Doe</h5>
-              <p className="text-xs text-gray-500 dark:text-[#8A99AF]">Admin</p>
+              <h5 className="font-medium text-sm text-[var(--text-normal)]">John Doe</h5>
+              <p className="text-xs text-[var(--text-muted)]">Admin</p>
             </div>
           </div>
         </div>
@@ -156,8 +156,8 @@ function NavItem({ href, icon, text, active, badge, isNew }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-gray-600 dark:text-[#8A99AF] duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-[#1C2434] hover:text-blue-600 dark:hover:text-[#7592FF]",
-        active && "bg-gray-100 dark:bg-[#1C2434] text-blue-600 dark:text-[#7592FF]"
+        "flex items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-[var(--text-muted)] duration-300 ease-in-out hover:bg-[var(--border-soft)] hover:text-[var(--accent-primary)]",
+        active && "bg-[var(--border-soft)] text-[var(--accent-primary)]"
       )}
     >
       <div className="flex items-center gap-3">
@@ -166,10 +166,10 @@ function NavItem({ href, icon, text, active, badge, isNew }: NavItemProps) {
       </div>
       <div className="flex items-center gap-2">
         {isNew && (
-          <span className="px-2 py-0.5 text-[10px] font-medium bg-[#3C50E0] text-white rounded">NEW</span>
+          <span className="px-2 py-0.5 text-[10px] font-medium bg-[var(--accent-primary)] text-[var(--accent-text-on-primary)] rounded">NEW</span>
         )}
         {badge && (
-          <span className="px-2 py-0.5 text-[10px] font-medium bg-[#1C2434] text-[#7592FF] rounded">{badge}</span>
+          <span className="px-2 py-0.5 text-[10px] font-medium bg-[var(--input-bg)] text-[var(--accent-primary)] rounded">{badge}</span>
         )}
       </div>
     </Link>
@@ -193,8 +193,8 @@ function NavDropdown({ text, icon, expanded, toggleExpanded, items, pathname }: 
       <button
         onClick={toggleExpanded}
         className={cn(
-          "flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-gray-600 dark:text-[#8A99AF] duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-[#1C2434] hover:text-blue-600 dark:hover:text-[#7592FF]",
-          (expanded || isActive) && "bg-gray-100 dark:bg-[#1C2434] text-blue-600 dark:text-[#7592FF]"
+          "flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-[var(--text-muted)] duration-300 ease-in-out hover:bg-[var(--border-soft)] hover:text-[var(--accent-primary)]",
+          (expanded || isActive) && "bg-[var(--border-soft)] text-[var(--accent-primary)]"
         )}
       >
         <div className="flex items-center gap-3">
