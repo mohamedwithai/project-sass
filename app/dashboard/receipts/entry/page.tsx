@@ -50,7 +50,7 @@ export default function ReceiptEntryPage() {
 
   return (
     <div className="w-full min-h-screen bg-[var(--page-bg)] py-8 px-4 md:px-8 flex flex-col items-center">
-      <div className="w-full max-w-2xl bg-[var(--content-bg)] p-6 md:p-8 rounded-lg shadow-lg border border-[var(--border-soft)]">
+      <div className="w-full bg-[var(--content-bg)] p-6 md:p-8 rounded-lg shadow-lg border border-[var(--border-soft)]">
         <h1 className="text-2xl font-semibold text-[var(--text-normal)] mb-6">Receipt Entry</h1>
         
         <form onSubmit={handleFormSubmit} className="space-y-8">
