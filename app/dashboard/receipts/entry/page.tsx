@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format as formatDateFn } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Helper to format date as YYYY-MM-DD for date input
 const formatDateForInput = (date: Date | string): string => {
@@ -37,8 +41,19 @@ const formatDateForDisplay = (date: Date | string): string => {
 };
 
 export default function ReceiptEntryPage() {
-  const [formData, setFormData] = useState({
-    date: "",
+  const [formData, setFormData] = useState<{
+    date: Date | undefined;
+    bankCashCategory: string;
+    accountCategory: string;
+    ledgerCategory: string;
+    Account_Type: string;
+    events: string;
+    donar: string;
+    description: string;
+    source: string;
+    amount: string;
+  }>({
+    date: undefined,
     bankCashCategory: "",
     accountCategory: "",
     ledgerCategory: "",
@@ -50,19 +65,6 @@ export default function ReceiptEntryPage() {
     amount: "",
   });
 
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const [displayDate, setDisplayDate] = useState("dd-mm-yyyy");
-
-  // Update displayDate when formData.date changes
-  useEffect(() => {
-    if (formData.date) {
-      setDisplayDate(formatDateForDisplay(formData.date));
-    } else {
-      setDisplayDate("dd-mm-yyyy");
-    }
-  }, [formData.date]);
-
-  // Dummy options for select fields (replace with real data or fetch as needed)
   const bankCashCategories = ["Bank", "Cash"];
   const accountCategories = ["General", "Special"];
   const ledgerCategories = ["Ledger1", "Ledger2"];
@@ -72,42 +74,19 @@ export default function ReceiptEntryPage() {
   const sourceTypes = ["Source1", "Source2"];
 
   const [loading, setLoading] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Submitting data:", {
+        ...formData,
+        date: formData.date ? formatDateFn(formData.date, "yyyy-MM-dd") : null 
+    });
     setTimeout(() => {
       setLoading(false);
       alert("Receipt submitted! (Implement real logic)");
     }, 1000);
-  };
-
-  const handleDateIconClick = () => {
-    if (dateInputRef.current) {
-      // Try modern showPicker() first
-      if (typeof dateInputRef.current.showPicker === 'function') {
-        try {
-          dateInputRef.current.showPicker();
-        } catch (e) {
-          // Fallback if showPicker fails or is not supported in this context
-          console.error("showPicker() failed, trying click()", e);
-          dateInputRef.current.click();
-        }
-      } else {
-        // Fallback for browsers that don't support showPicker()
-        dateInputRef.current.click();
-      }
-    }
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData((prev) => ({ ...prev, date: value }));
-    if (value) {
-      setDisplayDate(formatDateForDisplay(value));
-    } else {
-      setDisplayDate("dd-mm-yyyy");
-    }
   };
 
   return (
@@ -116,38 +95,38 @@ export default function ReceiptEntryPage() {
         <h1 className="text-2xl font-semibold text-[var(--text-normal)] mb-6">Receipt Entry</h1>
         
         <form onSubmit={handleFormSubmit} className="space-y-8">
-          {/* Section: Receipt Info */}
           <section>
             <h2 className="text-xl font-medium text-[var(--text-normal)] mb-5">Receipt Info</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
               {/* Date */}
               <div className="space-y-1.5">
-                <Label htmlFor="dateDisplay" className="text-sm font-medium text-[var(--text-muted)]">Date</Label>
-                <div className="relative">
-                  {/* Visible input for display */}
-                  <Input
-                    id="dateDisplay"
-                    type="text"
-                    readOnly
-                    value={displayDate}
-                    onClick={handleDateIconClick} // Open picker when text input is clicked too
-                    className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--input-bg)] py-2.5 px-4 text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] cursor-pointer"
-                  />
-                  {/* Hidden actual date input */}
-                  <Input
-                    ref={dateInputRef}
-                    id="dateValue"
-                    type="date"
-                    value={formData.date} // Should be YYYY-MM-DD
-                    onChange={handleDateChange}
-                    className="absolute top-0 left-0 w-full h-full opacity-0 pointer-events-none"
-                    style={{ colorScheme: 'light dark' }}
-                  />
-                  <CalendarIcon 
-                    onClick={handleDateIconClick}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-muted)] cursor-pointer"
-                  />
-                </div>
+                <Label htmlFor="date" className="text-sm font-medium text-[var(--text-muted)]">Date</Label>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      id="date"
+                      className={cn(
+                        "w-full justify-start text-left font-normal border-[var(--border-strong)] bg-[var(--input-bg)] text-[var(--text-normal)] hover:bg-[var(--input-bg)] hover:text-[var(--text-normal)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] py-2.5 px-4 rounded-md",
+                        !formData.date && "text-[var(--text-placeholder)]"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-[var(--text-muted)]" />
+                      {formData.date ? formatDateFn(formData.date, "dd-MM-yyyy") : <span>dd-mm-yyyy</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[var(--content-bg)] border-[var(--border-strong)]" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={(selectedDate) => {
+                        setFormData((prev) => ({ ...prev, date: selectedDate as Date | undefined }));
+                        setIsCalendarOpen(false);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               {/* Bank/Cash Category */}
               <div className="space-y-1.5">
