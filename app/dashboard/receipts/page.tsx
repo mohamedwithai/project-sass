@@ -716,12 +716,8 @@ export default function ReceiptsPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    onKeyDown={(e) => {
-                      // Stop propagation of keyboard events to prevent any unintended shortcuts
-                      e.stopPropagation();
-                    }}
-                    className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white min-h-[100px]"
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="bg-white dark:bg-[#1C2434] border-gray-200 dark:border-[#2E3A4D] text-gray-900 dark:text-white min-h-[100px] resize-none focus:ring-2 focus:ring-[#3C50E0] focus:border-transparent"
                     placeholder="Enter description here..."
                   />
                 </div>

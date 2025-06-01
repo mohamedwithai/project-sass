@@ -13,6 +13,7 @@ import {
   ArrowLeftRight,
   ChevronDown,
   ChevronRight,
+  Settings,
   X
 } from 'lucide-react'
 
@@ -86,8 +87,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </div>
 
         {/* Sidebar content */}
-        <ScrollArea className="flex-1 px-4">
-          <nav className="flex flex-col gap-1">
+        <ScrollArea className="flex-1">
+          <nav className="flex flex-col gap-1 px-4">
             {/* Dashboard Dropdown */}
             <NavDropdown
               text="Dashboard"
@@ -112,6 +113,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
                 },
               ]}
               pathname={pathname}
+            />
+
+            {/* Settings Link */}
+            <NavItem
+              href="/dashboard/settings"
+              icon={<Settings className="h-5 w-5" />}
+              text="Settings"
+              active={pathname === '/dashboard/settings'}
             />
           </nav>
         </ScrollArea>
