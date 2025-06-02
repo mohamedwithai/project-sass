@@ -15,9 +15,9 @@ export const setBankCashCategories = (categories: string[]) => {
 export const getAccountCategories = (): string[] => {
   if (typeof window !== 'undefined') {
     const storedCategories = localStorage.getItem('accountCategories');
-    return storedCategories ? JSON.parse(storedCategories) : ["General", "Special"];
+    return storedCategories ? JSON.parse(storedCategories) : ["General Donation", "Special Donation", "Interest Capitalized From Bank", "Bank Charges"];
   }
-  return ["General", "Special"];
+  return ["General Donation", "Special Donation", "Interest Capitalized From Bank", "Bank Charges"];
 };
 
 export const setAccountCategories = (categories: string[]) => {
@@ -29,9 +29,9 @@ export const setAccountCategories = (categories: string[]) => {
 export const getLedgerCategories = (): string[] => {
   if (typeof window !== 'undefined') {
     const storedCategories = localStorage.getItem('ledgerCategories');
-    return storedCategories ? JSON.parse(storedCategories) : ["Ledger1", "Ledger2"];
+    return storedCategories ? JSON.parse(storedCategories) : ["Direct Incomes", "Indirect Incomes"];
   }
-  return ["Ledger1", "Ledger2"];
+  return ["Direct Incomes", "Indirect Incomes"];
 };
 
 export const setLedgerCategories = (categories: string[]) => {
@@ -93,5 +93,40 @@ export const getSourceTypes = (): string[] => {
 export const setSourceTypes = (categories: string[]) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('sourceTypes', JSON.stringify(categories));
+  }
+};
+
+export const getDependentSourceTypes = (): Record<string, string[]> => {
+  if (typeof window !== 'undefined') {
+    const storedDependentSources = localStorage.getItem('dependentSourceTypes');
+    return storedDependentSources ? JSON.parse(storedDependentSources) : {
+      "Bank": ["City Union Bank"],
+      "Cash": ["Petty Cash Noor"],
+      "Petty Cash": ["Petty Cash Box"],
+    };
+  }
+  return {};
+};
+
+export const setDependentSourceTypes = (dependentSources: Record<string, string[]>) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('dependentSourceTypes', JSON.stringify(dependentSources));
+  }
+};
+
+export const getDependentAccountCategories = (): Record<string, string[]> => {
+  if (typeof window !== 'undefined') {
+    const storedDependentAccounts = localStorage.getItem('dependentAccountCategories');
+    return storedDependentAccounts ? JSON.parse(storedDependentAccounts) : {
+      "Direct Incomes": ["General Donation", "Special Donation"],
+      "Indirect Incomes": ["Interest Capitalized From Bank", "Bank Charges"],
+    };
+  }
+  return {};
+};
+
+export const setDependentAccountCategories = (dependentAccounts: Record<string, string[]>) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('dependentAccountCategories', JSON.stringify(dependentAccounts));
   }
 }; 

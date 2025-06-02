@@ -25,6 +25,8 @@ import {
   getEventsList,
   getDonarTypes,
   getSourceTypes,
+  getDependentSourceTypes,
+  getDependentAccountCategories,
 } from "@/lib/constants";
 
 // Helper to format date as YYYY-MM-DD for date input
@@ -53,19 +55,19 @@ export default function ReceiptEntryPage() {
   const [formData, setFormData] = useState<{
     date: Date | undefined;
     bankCashCategory: string;
-    accountCategory: string;
-    ledgerCategory: string;
+    ledgerCategory: string; // This will be the parent dropdown
+    accountCategory: string; // This will be the dependent dropdown
     Account_Type: string;
     events: string;
     donar: string;
     description: string;
     source: string;
     amount: string;
-  }>({
+  }>({ 
     date: undefined,
     bankCashCategory: "",
-    accountCategory: "",
     ledgerCategory: "",
+    accountCategory: "",
     Account_Type: "",
     events: "",
     donar: "",
@@ -77,22 +79,53 @@ export default function ReceiptEntryPage() {
   const [loading, setLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [bankCashCategoriesState, setBankCashCategoriesState] = useState<string[]>([]);
-  const [accountCategoriesState, setAccountCategoriesState] = useState<string[]>([]);
-  const [ledgerCategoriesState, setLedgerCategoriesState] = useState<string[]>([]);
+  const [accountCategoriesState, setAccountCategoriesState] = useState<string[]>([]); 
+  const [ledgerCategoriesState, setLedgerCategoriesState] = useState<string[]>([]); 
   const [accountTypesState, setAccountTypesState] = useState<string[]>([]);
   const [eventsListState, setEventsListState] = useState<string[]>([]);
   const [donarTypesState, setDonarTypesState] = useState<string[]>([]);
   const [sourceTypesState, setSourceTypesState] = useState<string[]>([]);
+  const [dependentSourceTypes, setDependentSourceTypes] = useState<Record<string, string[]>>({});
+  const [filteredSourceTypes, setFilteredSourceTypes] = useState<string[]>([]);
+  const [dependentAccountCategories, setDependentAccountCategories] = useState<Record<string, string[]>>({});
+  const [filteredAccountCategories, setFilteredAccountCategories] = useState<string[]>([]);
 
   useEffect(() => {
     setBankCashCategoriesState(getBankCashCategories());
-    setAccountCategoriesState(getAccountCategories());
-    setLedgerCategoriesState(getLedgerCategories());
+    setAccountCategoriesState(getAccountCategories()); 
+    setLedgerCategoriesState(getLedgerCategories()); 
     setAccountTypesState(getAccountTypes());
     setEventsListState(getEventsList());
     setDonarTypesState(getDonarTypes());
     setSourceTypesState(getSourceTypes());
+    setDependentSourceTypes(getDependentSourceTypes());
+    setDependentAccountCategories(getDependentAccountCategories());
   }, []);
+
+  useEffect(() => {
+    const selectedBankCashCategory = formData.bankCashCategory;
+    if (selectedBankCashCategory && dependentSourceTypes[selectedBankCashCategory]) {
+      setFilteredSourceTypes(dependentSourceTypes[selectedBankCashCategory]);
+      if (!dependentSourceTypes[selectedBankCashCategory].includes(formData.source)) {
+        setFormData((prev) => ({ ...prev, source: "" }));
+      }
+    } else {
+      setFilteredSourceTypes(sourceTypesState);
+    }
+  }, [formData.bankCashCategory, dependentSourceTypes, sourceTypesState]);
+
+  useEffect(() => {
+    const selectedLedgerCategory = formData.ledgerCategory; // Now the parent category
+    if (selectedLedgerCategory && dependentAccountCategories[selectedLedgerCategory]) {
+      setFilteredAccountCategories(dependentAccountCategories[selectedLedgerCategory]);
+      if (!dependentAccountCategories[selectedLedgerCategory].includes(formData.accountCategory)) {
+        setFormData((prev) => ({ ...prev, accountCategory: "" }));
+      }
+    } else {
+      setFilteredAccountCategories(accountCategoriesState); // Fallback to all account types if no dependency
+      setFormData((prev) => ({ ...prev, accountCategory: "" }));
+    }
+  }, [formData.ledgerCategory, dependentAccountCategories, accountCategoriesState]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,18 +198,18 @@ export default function ReceiptEntryPage() {
                   </SelectContent>
                 </Select>
               </div>
-               {/* Account Category */}
+              {/* Ledger Category (now parent) */}
               <div className="space-y-1.5">
-                <Label htmlFor="accountCategory" className="text-sm font-medium text-[var(--text-muted)]">Account Category</Label>
+                <Label htmlFor="ledgerCategory" className="text-sm font-medium text-[var(--text-muted)]">Ledger Category</Label>
                 <Select
-                  value={formData.accountCategory}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, accountCategory: value }))}
+                  value={formData.ledgerCategory}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, ledgerCategory: value, accountCategory: "" }))} // Reset dependent on parent change
                 >
                   <SelectTrigger className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--input-bg)] py-2.5 px-4 text-[var(--text-normal)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]">
-                    <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {accountCategoriesState.map((category) => (
+                    {ledgerCategoriesState.map((category: string) => (
                     <SelectItem key={category} value={category} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {category}
                     </SelectItem>
@@ -184,18 +217,19 @@ export default function ReceiptEntryPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Ledger Category */}
+               {/* Account Category (now dependent) */}
               <div className="space-y-1.5">
-                <Label htmlFor="ledgerCategory" className="text-sm font-medium text-[var(--text-muted)]">Ledger Category</Label>
+                <Label htmlFor="accountCategory" className="text-sm font-medium text-[var(--text-muted)]">Account Category</Label>
                 <Select
-                  value={formData.ledgerCategory}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, ledgerCategory: value }))}
+                  value={formData.accountCategory}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, accountCategory: value }))}
+                  disabled={!formData.ledgerCategory} // Disable if parent is not selected
                 >
                   <SelectTrigger className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--input-bg)] py-2.5 px-4 text-[var(--text-normal)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]">
-                    <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]" />
+                    <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {ledgerCategoriesState.map((category) => (
+                    {filteredAccountCategories.map((category) => (
                     <SelectItem key={category} value={category} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {category}
                     </SelectItem>
@@ -290,7 +324,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select source" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {sourceTypesState.map((type) => (
+                    {filteredSourceTypes.map((type) => (
                     <SelectItem key={type} value={type} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {type}
                     </SelectItem>
