@@ -115,12 +115,25 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               pathname={pathname}
             />
 
-            {/* Settings Link */}
-            <NavItem
-              href="/dashboard/settings"
-              icon={<Settings className="h-5 w-5" />}
+            {/* Settings Dropdown */}
+            <NavDropdown
               text="Settings"
-              active={pathname === '/dashboard/settings'}
+              icon={<Settings className="h-5 w-5" />}
+              expanded={expanded.settings}
+              toggleExpanded={() => setExpanded(prev => ({ ...prev, settings: !prev.settings }))}
+              items={[
+                {
+                  href: '/dashboard/settings',
+                  text: 'General Settings',
+                  icon: <Settings className="h-5 w-5" />
+                },
+                {
+                  href: '/dashboard/settings/security',
+                  text: 'Security Settings',
+                  icon: <Settings className="h-5 w-5" />
+                }
+              ]}
+              pathname={pathname}
             />
           </nav>
         </ScrollArea>

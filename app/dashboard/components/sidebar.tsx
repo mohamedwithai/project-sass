@@ -11,7 +11,7 @@ const menuItems = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
-    isExpandable: true
+    isExpandable: false
   },
   {
     title: 'Receipts',
@@ -35,7 +35,13 @@ const menuItems = [
     title: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
-    isExpandable: false
+    isExpandable: true,
+    children: [
+      {
+        title: 'Security Settings',
+        href: '/dashboard/settings/security',
+      }
+    ]
   }
 ]
 
@@ -60,14 +66,14 @@ export default function Sidebar() {
                     href={item.href}
                     className={cn(
                       'group relative flex items-center gap-3 rounded-lg py-2 px-4 font-medium duration-300 ease-in-out',
-                      pathname === item.href 
+                      pathname === item.href || (item.isExpandable && pathname.startsWith(item.href))
                         ? 'text-[#3B82F6] bg-[#1E293B]' 
                         : 'text-[#64748B] hover:text-[#3B82F6] hover:bg-[#1E293B]'
                     )}
                   >
                     <item.icon className={cn(
                       "h-5 w-5",
-                      pathname === item.href 
+                      pathname === item.href || (item.isExpandable && pathname.startsWith(item.href))
                         ? 'text-[#3B82F6]' 
                         : 'text-[#64748B] group-hover:text-[#3B82F6]'
                     )} />
@@ -76,7 +82,7 @@ export default function Sidebar() {
                       <svg
                         className={cn(
                           "absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 fill-current",
-                          pathname === item.href ? 'text-[#3B82F6]' : 'text-[#64748B]'
+                          pathname === item.href || (item.isExpandable && pathname.startsWith(item.href)) ? 'text-[#3B82F6]' : 'text-[#64748B]'
                         )}
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -85,6 +91,28 @@ export default function Sidebar() {
                       </svg>
                     )}
                   </Link>
+                  {item.isExpandable && item.children && (
+                    <ul className={cn(
+                      "ml-6 mt-1 flex flex-col gap-1",
+                      pathname.startsWith(item.href) ? 'block' : 'hidden'
+                    )}>
+                      {item.children.map((child) => (
+                        <li key={child.title}>
+                          <Link
+                            href={child.href}
+                            className={cn(
+                              'group relative flex items-center gap-3 rounded-lg py-2 px-4 font-medium duration-300 ease-in-out',
+                              pathname === child.href 
+                                ? 'text-[#3B82F6] bg-[#1E293B]' 
+                                : 'text-[#64748B] hover:text-[#3B82F6] hover:bg-[#1E293B]'
+                            )}
+                          >
+                            {child.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>
