@@ -6,14 +6,43 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --page-bg: #F1F5F9;
+  --content-bg: #FFFFFF;
+  --input-bg: #FFFFFF;
+  --text-normal: #0F172A;
+  --text-muted: #374151;
+  --text-placeholder: #94A3B8;
+  --border-strong: #CBD5E1;
+  --border-soft: #E2E8F0;
+  --accent-primary: #3C50E0;
+  --accent-primary-hover: #3141B4;
+  --accent-text-on-primary: #FFFFFF;
+  --section-box-bg: #FFFFFF;
+  --section-box-border: #E2E8F0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+.dark, :root:not([class]) {
+  @media (prefers-color-scheme: dark) {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
   }
+}
+
+.dark {
+  --page-bg: #101828;
+  --content-bg: #1C2434;
+  --input-bg: #0F172A;
+  --text-normal: #DEE4EE;
+  --text-muted: #8A99AF;
+  --text-placeholder: #8A99AF;
+  --border-strong: #4A5567;
+  --border-soft: #2E3A4D;
+  --accent-primary: #3C50E0;
+  --accent-primary-hover: #4B5BEC;
+  --accent-text-on-primary: #FFFFFF;
+  --section-box-bg: #24303F;
+  --section-box-border: #3d4d60;
 }
 
 @layer base {
@@ -78,5 +107,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: var(--page-bg) !important;
+    color: var(--text-normal) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Hide the default calendar picker indicator for date inputs in WebKit browsers */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none; /* For older WebKit */
+    appearance: none; /* Standard */
   }
 }

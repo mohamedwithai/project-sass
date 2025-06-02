@@ -69,7 +69,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, isMobile }: Header
           </Button>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
@@ -105,7 +105,7 @@ export default function Header({ sidebarOpen, setSidebarOpen, isMobile }: Header
                 ))}
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center">
+              <DropdownMenuItem>
                 <Link href="#" className="text-sm font-medium text-blue-600 dark:text-blue-400">
                   View all notifications
                 </Link>
@@ -132,9 +132,11 @@ export default function Header({ sidebarOpen, setSidebarOpen, isMobile }: Header
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/settings" className="w-full flex items-center">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
@@ -147,13 +149,15 @@ export default function Header({ sidebarOpen, setSidebarOpen, isMobile }: Header
       </div>
       
       {/* Mobile search */}
-      <div className={`absolute top-full left-0 right-0 p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 ${searchOpen ? 'block' : 'hidden'}`}>
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="w-full bg-slate-50 border-slate-300 dark:bg-slate-800 dark:border-slate-700"
-        />
-      </div>
+      {searchOpen && (
+        <div className="absolute top-full left-0 right-0 p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 md:hidden">
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="w-full bg-slate-50 border-slate-300 dark:bg-slate-800 dark:border-slate-700"
+          />
+        </div>
+      )}
     </header>
   )
 }

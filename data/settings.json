@@ -1,0 +1,44 @@
+{
+  "bankCashCategories": [
+    "Bank",
+    "Cash",
+    "UPI",
+    "Online Transfer"
+  ],
+  "accountCategories": [
+    "General Fund",
+    "Building Fund",
+    "Education Fund",
+    "Temple Fund"
+  ],
+  "ledgerCategories": [
+    "General Donation",
+    "Special Donation",
+    "Corpus Donation",
+    "Sponsorship"
+  ],
+  "accountTypes": [
+    "Income",
+    "Expense",
+    "Asset",
+    "Liability"
+  ],
+  "events": [
+    "Annadhanam",
+    "Pongal Festival",
+    "Temple Festival",
+    "Regular"
+  ],
+  "donarTypes": [
+    "Individual",
+    "Corporate",
+    "Trust",
+    "Anonymous"
+  ],
+  "sourceTypes": [
+    "Online",
+    "Cash",
+    "Cheque",
+    "Bank Transfer"
+  ]
+} 
