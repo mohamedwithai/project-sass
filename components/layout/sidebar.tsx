@@ -57,7 +57,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     <aside
       id="sidebar"
       className={cn(
-        'fixed z-40 left-0 top-0 h-screen w-64 flex-shrink-0 bg-[#0F1824] transition-all duration-300 ease-in-out lg:static',
+        'fixed z-40 left-0 top-0 h-screen w-64 flex-shrink-0 bg-gray-50 dark:bg-[#0F1824] transition-all duration-300 ease-in-out lg:static',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}
     >
@@ -68,13 +68,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
             <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#3C50E0]">
               <LayoutDashboard className="h-6 w-6 text-white" />
             </div>
-            <span className="text-lg font-semibold text-white">TailAdmin</span>
+            <span className="text-lg font-semibold text-gray-900 dark:text-white">TailAdmin</span>
           </Link>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(false)}
-            className="flex lg:hidden text-white hover:bg-[#1C2434]"
+            className="flex lg:hidden text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1C2434]"
           >
             <X className="w-6 h-6" />
             <span className="sr-only">Close sidebar</span>
@@ -82,7 +82,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </div>
 
         <div className="px-6 py-4">
-          <p className="text-xs font-medium text-[#8A99AF] tracking-wider">MENU</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-[#8A99AF] tracking-wider">MENU</p>
         </div>
 
         {/* Sidebar content */}
@@ -117,14 +117,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         </ScrollArea>
 
         {/* Sidebar footer */}
-        <div className="mt-auto p-4 border-t border-[#2E3A4D]">
-          <div className="flex items-center gap-3 rounded-lg bg-[#2E3A4D] p-3">
+        <div className="mt-auto p-4 border-t border-gray-200 dark:border-[#2E3A4D]">
+          <div className="flex items-center gap-3 rounded-lg bg-gray-100 dark:bg-[#2E3A4D] p-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3C50E0] text-white font-semibold">
               JD
             </div>
             <div className="flex-1">
-              <h5 className="font-medium text-sm text-white">John Doe</h5>
-              <p className="text-xs text-[#8A99AF]">Admin</p>
+              <h5 className="font-medium text-sm text-gray-900 dark:text-white">John Doe</h5>
+              <p className="text-xs text-gray-500 dark:text-[#8A99AF]">Admin</p>
             </div>
           </div>
         </div>
@@ -147,8 +147,8 @@ function NavItem({ href, icon, text, active, badge, isNew }: NavItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-[#8A99AF] duration-300 ease-in-out hover:bg-[#1C2434] hover:text-[#7592FF]",
-        active && "bg-[#1C2434] text-[#7592FF]"
+        "flex items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-gray-600 dark:text-[#8A99AF] duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-[#1C2434] hover:text-blue-600 dark:hover:text-[#7592FF]",
+        active && "bg-gray-100 dark:bg-[#1C2434] text-blue-600 dark:text-[#7592FF]"
       )}
     >
       <div className="flex items-center gap-3">
@@ -184,8 +184,8 @@ function NavDropdown({ text, icon, expanded, toggleExpanded, items, pathname }: 
       <button
         onClick={toggleExpanded}
         className={cn(
-          "flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-[#8A99AF] duration-300 ease-in-out hover:bg-[#1C2434] hover:text-[#7592FF]",
-          (expanded || isActive) && "bg-[#1C2434] text-[#7592FF]"
+          "flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-sm leading-5 font-medium text-gray-600 dark:text-[#8A99AF] duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-[#1C2434] hover:text-blue-600 dark:hover:text-[#7592FF]",
+          (expanded || isActive) && "bg-gray-100 dark:bg-[#1C2434] text-blue-600 dark:text-[#7592FF]"
         )}
       >
         <div className="flex items-center gap-3">
