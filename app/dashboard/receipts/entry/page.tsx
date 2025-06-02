@@ -17,6 +17,15 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format as formatDateFn } from "date-fns";
 import { cn } from "@/lib/utils";
+import {
+  getBankCashCategories,
+  getAccountCategories,
+  getLedgerCategories,
+  getAccountTypes,
+  getEventsList,
+  getDonarTypes,
+  getSourceTypes,
+} from "@/lib/constants";
 
 // Helper to format date as YYYY-MM-DD for date input
 const formatDateForInput = (date: Date | string): string => {
@@ -65,16 +74,25 @@ export default function ReceiptEntryPage() {
     amount: "",
   });
 
-  const bankCashCategories = ["Bank", "Cash"];
-  const accountCategories = ["General", "Special"];
-  const ledgerCategories = ["Ledger1", "Ledger2"];
-  const accountTypes = ["Type1", "Type2"];
-  const eventsList = ["Event1", "Event2"];
-  const donarTypes = ["Donor1", "Donor2"];
-  const sourceTypes = ["Source1", "Source2"];
-
   const [loading, setLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [bankCashCategoriesState, setBankCashCategoriesState] = useState<string[]>([]);
+  const [accountCategoriesState, setAccountCategoriesState] = useState<string[]>([]);
+  const [ledgerCategoriesState, setLedgerCategoriesState] = useState<string[]>([]);
+  const [accountTypesState, setAccountTypesState] = useState<string[]>([]);
+  const [eventsListState, setEventsListState] = useState<string[]>([]);
+  const [donarTypesState, setDonarTypesState] = useState<string[]>([]);
+  const [sourceTypesState, setSourceTypesState] = useState<string[]>([]);
+
+  useEffect(() => {
+    setBankCashCategoriesState(getBankCashCategories());
+    setAccountCategoriesState(getAccountCategories());
+    setLedgerCategoriesState(getLedgerCategories());
+    setAccountTypesState(getAccountTypes());
+    setEventsListState(getEventsList());
+    setDonarTypesState(getDonarTypes());
+    setSourceTypesState(getSourceTypes());
+  }, []);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +157,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {bankCashCategories.map((category) => (
+                    {bankCashCategoriesState.map((category) => (
                     <SelectItem key={category} value={category} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {category}
                     </SelectItem>
@@ -155,10 +173,10 @@ export default function ReceiptEntryPage() {
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, accountCategory: value }))}
                 >
                   <SelectTrigger className="w-full rounded-md border border-[var(--border-strong)] bg-[var(--input-bg)] py-2.5 px-4 text-[var(--text-normal)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]">
-                    <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]" />
+                    <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {accountCategories.map((category) => (
+                    {accountCategoriesState.map((category) => (
                     <SelectItem key={category} value={category} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {category}
                     </SelectItem>
@@ -177,7 +195,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select category" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {ledgerCategories.map((category) => (
+                    {ledgerCategoriesState.map((category) => (
                     <SelectItem key={category} value={category} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {category}
                     </SelectItem>
@@ -196,7 +214,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select account type" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {accountTypes.map((type) => (
+                    {accountTypesState.map((type) => (
                     <SelectItem key={type} value={type} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {type}
                     </SelectItem>
@@ -215,7 +233,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select event" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {eventsList.map((event) => (
+                    {eventsListState.map((event) => (
                     <SelectItem key={event} value={event} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {event}
                     </SelectItem>
@@ -234,7 +252,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select donar" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]" />
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {donarTypes.map((type) => (
+                    {donarTypesState.map((type) => (
                     <SelectItem key={type} value={type} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {type}
                     </SelectItem>
@@ -272,7 +290,7 @@ export default function ReceiptEntryPage() {
                     <SelectValue placeholder="Select source" className="text-[var(--text-normal)] placeholder:text-[var(--text-placeholder)]"/>
                   </SelectTrigger>
                   <SelectContent className="bg-[var(--input-bg)] border-[var(--border-strong)] text-[var(--text-normal)]">
-                    {sourceTypes.map((type) => (
+                    {sourceTypesState.map((type) => (
                     <SelectItem key={type} value={type} className="hover:bg-[var(--accent-primary)] focus:bg-[var(--accent-primary)] hover:text-[var(--accent-text-on-primary)] focus:text-[var(--accent-text-on-primary)]">
                         {type}
                     </SelectItem>
